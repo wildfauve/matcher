@@ -1,21 +1,27 @@
 <table class="table">
    <thead>
      <tr>
-       <th>Kiwi URL</th>
-       <th>Profile Items</th>
-       <th>Actions</th>      
+       <th>Full Name</th>
+       <th>Type</th>     
+       <th>Matches</th>             
+       <th>Actions</th>             
      </tr>
    </thead>
    <tbody>
       <% @people.each do |person|%>
          <tr>
             <td>
-               
+               <%= person.full_name%>
             </td>
             <td>
+               <%= person.type%>               
             </td>
             <td>
-            </td>
+               <%= person.matches.count%>
+               <% person.matches.each do |match| %>
+                  <p><%= match.dup_person.full_name %>  <%= match.score %></p>
+               <% end %>
+            </td>            
          </tr>
       <% end %>
    </tbody>

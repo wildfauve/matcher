@@ -4,12 +4,17 @@ class Person
 
   include Mongoid::Document
   include Mongoid::Timestamps  
+  include Elasticsearch::Model
+  include Elasticsearch::Model::Callbacks
+  
+  index_name    "people-#{Rails.env}"
+  document_type "person"
+  
   
   field :type, type: Symbol # contact_person
-  field :contact_iD, type: String # contact_person
-  field :client_iD, type: String # contact_person
-  field :first_name, type: String # contact_person
-  field :surname, type: String # contact_person
+  field :contact_id, type: String # contact_person
+  field :client_id, type: String # contact_person
+  field :full_name, type: String # agg first_name, surnam
   field :relationship, type: String # contact_person
   field :department, type: String # contact_person
   field :phone_area, type: String # contact_person
@@ -17,10 +22,106 @@ class Person
   field :phone_country, type: String # contact_person
   field :fax_area, type: String # contact_person
   field :fax_no, type: String # contact_person
-  field :fax_country,type: String # contact_person
+  field :fax_country, type: String # contact_person
   field :email, type: String # contact_person
   
   embeds_one :address
+  
+  embeds_many :matches
+    
+=begin  
+  {
+    "settings": {
+      "analysis": {
+        "filter": {
+          "dbl_metaphone": { 
+            "type":    "phonetic",
+            "encoder": "double_metaphone"
+          }
+        },
+        "analyzer": {
+          "dbl_metaphone": {
+            "tokenizer": "standard",
+            "filter":    "dbl_metaphone" 
+          }
+        }
+      }
+    }
+  }
+  
+  
+{
+  "properties": {
+    "name": {
+      "type": "string",
+      "fields": {
+        "phonetic": { 
+          "type":     "string",
+          "analyzer": "dbl_metaphone"
+        }
+      }
+    }
+  }
+}
+
+  # INDEX Settings and Mappings
+=end
+  settings index: {
+    number_of_shards: 1,
+    analysis: {
+      filter: {
+        trigrams_filter: {
+          type: 'ngram',
+          min_gram: 2,
+          max_gram: 10
+        },
+        content_filter: {
+          type: 'ngram',
+          min_gram: 4,
+          max_gram: 20
+        },
+        dbl_metaphone: { 
+          type: "phonetic",
+          encoder: "double_metaphone"
+        }
+      },
+      analyzer: {
+        index_trigrams_analyzer: {
+          type: 'custom',
+          tokenizer: 'standard',
+          filter: ['lowercase', 'trigrams_filter']
+        },
+        search_trigrams_analyzer: {
+          type: 'custom',
+          tokenizer: 'whitespace',
+          filter: ['lowercase']
+        },
+        english: {
+          tokenizer: 'standard',
+          filter: ['standard', 'lowercase', 'content_filter']
+        },
+        email: {
+          tokenizer: 'uax_url_email'
+        },
+        dbl_metaphone: {
+          tokenizer: "standard",
+          filter:    "dbl_metaphone" 
+        }
+      }
+    }
+  } do
+    mappings dynamic: 'false' do
+      #indexes :full_name, type: :string, analyzer: :keyword    
+      indexes :email, analyzer: :email
+      indexes :full_name, type: :string, analyzer: :dbl_metaphone    
+      #indexes :name, index_analyzer: 'index_trigrams_analyzer', search_analyzer: 'search_trigrams_analyzer'
+      #indexes :description, index_analyzer: 'english', search_analyzer: 'english'
+      #indexes :manufacturer_name, index_analyzer: 'english', search_analyzer: 'english'
+      #indexes :type_name, analyzer: 'snowball'
+    end
+  end
+
+  
 
 =begin
 -- Client_ID, Client_Type, Legal_Name, Title, First_Names, Surname, Preferred_Name, DoB
@@ -61,25 +162,83 @@ from Signing_Authority
   
 =end
   
-  def create_me(green_kiwi: nil, id_attrs: nil, user_proxy: nil)
-    self.update_attrs(green_kiwi: green_kiwi, id_attrs: id_attrs, user_proxy: user_proxy)
-    self.save
-    publish(:successful_green_kiwi_create_event, self)
+  def self.delete_index
+    self.__elasticsearch__.client.indices.delete index: self.index_name rescue nil
   end
   
-  def update_me(green_kiwi: nil, id_attrs: nil)
-    self.update_attrs(green_kiwi: green_kiwi, id_attrs: id_attrs)
+  def self.create_index
+    self.__elasticsearch__.create_index! force: true
+    self.__elasticsearch__.refresh_index!
+  end
+  
+  def self.comparison
+    self.all.each do |person|
+      s = self.search person.full_name
+      person.match s.results
+    end
+  end
+  
+  def self.load(person: nil)
+    self.new.create_me(person: person)
+  end
+  
+  def create_me(person: nil)
+    self.address = Address.create_me(address_attrs: extract_address_attrs(person))
+    self.update_attrs(person: person)
+    self.save
+    #publish(:successful_green_kiwi_create_event, self)
+  end
+  
+  def update_me(person: nil)
+    self.update_attrs(person: person)
     self.save
     publish(:successful_green_kiwi_update_event, self)
   end
   
   
-  def update_attrs(green_kiwi: green_kiwi, id_attrs: id_attrs, user_proxy: nil)
-    self.user_proxy = user_proxy if self.user_proxy != user_proxy || !user_proxy.nil?
-    self.kiwi_url = green_kiwi[:kiwi_url]
-    add_profile_entries(id_attrs: id_attrs)
+  def update_attrs(person: nil)
+    
+    person.each {|name, value| self.send("#{name}=", value) unless [:address_line_1, :address_line_2, :address_line_3, :city, :country, :post_code, :first_name, :surname].include? name}
+    self.full_name = {first_name: person[:first_name], surname: person[:surname]}
+  end
+  
+  def extract_address_attrs(person)
+    {
+      address_line_1: person[:address_line_1],
+      address_line_2: person[:address_line_2], 
+      address_line_3: person[:address_line_3], 
+      city: person[:city], 
+      country: person[:country],
+      post_code: person[:post_code]
+    }
     
   end
   
+  def as_indexed_json(options={})
+    as_json(except: [:id, :_id])
+  end
+  
+  
+  def full_name=(name)
+    if name[:full_name]
+      self[:full_name] = name[:full_name]
+    else
+      self[:full_name] = "#{name[:first_name]} #{name[:surname]}"
+    end
+  end
+  
+  def match(results)
+    results.each do |result|
+      if result._id != self.id.to_s
+        m = self.matches.where(matched_person: result._id).first
+        if m
+          m.update_attrs(result)
+        else
+          self.matches << Match.create_me(result)
+        end
+      end
+    end
+    save
+  end
   
 end
