@@ -17,9 +17,8 @@
                <%= person.type%>               
             </td>
             <td>
-               <%= person.matches.count%>
                <% person.matches.each do |match| %>
-                  <p><%= match.dup_person.full_name %>  <%= match.score %></p>
+                  <%= render partial: "matches", locals: {match: match} %>
                <% end %>
             </td>            
          </tr>

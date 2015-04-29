@@ -105,7 +105,8 @@ class Person
         },
         dbl_metaphone: {
           tokenizer: "standard",
-          filter:    "dbl_metaphone" 
+          filter:    ["standard", "lowercase", "dbl_metaphone" ],
+          replace: true
         }
       }
     }
@@ -234,7 +235,7 @@ from Signing_Authority
         if m
           m.update_attrs(result)
         else
-          self.matches << Match.create_me(result)
+          m = self.matches << Match.create_me(result)
         end
       end
     end
