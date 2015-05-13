@@ -4,12 +4,13 @@ class PeopleImportHandler
   
   include Wisper::Publisher  
   
-  def initialize(path: nil, people: nil)
+  def initialize(path: nil, people: nil, type: nil)
     if path
       @people = CSV.read(path)
     else
       @people = people
     end
+    @type = type
     self
   end
   
@@ -33,7 +34,7 @@ class PeopleImportHandler
       properties[t] = person[ct]
       ct += 1
     end
-    properties[:type] = :contact_person
+    properties[:type] = @type
     properties
   end
   

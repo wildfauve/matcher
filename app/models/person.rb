@@ -25,7 +25,7 @@ class Person
   field :fax_country, type: String # contact_person
   field :email, type: String # contact_person
   
-  embeds_one :address
+  embeds_many :addresses
   
   embeds_many :matches
     
@@ -184,7 +184,7 @@ from Signing_Authority
   end
   
   def create_me(person: nil)
-    self.address = Address.create_me(address_attrs: extract_address_attrs(person))
+    self.addresses << Address.create_me(address_attrs: extract_address_attrs(person))
     self.update_attrs(person: person)
     self.save
     #publish(:successful_green_kiwi_create_event, self)
@@ -210,7 +210,8 @@ from Signing_Authority
       address_line_3: person[:address_line_3], 
       city: person[:city], 
       country: person[:country],
-      post_code: person[:post_code]
+      post_code: person[:post_code],
+      type: person[:type]
     }
     
   end
@@ -235,8 +236,10 @@ from Signing_Authority
         if m
           m.update_attrs(result)
         else
-          m = self.matches << Match.create_me(result)
+          m = Match.create_me(result)
+          self.matches << m
         end
+        m.reducers
       end
     end
     save

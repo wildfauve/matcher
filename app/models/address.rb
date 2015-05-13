@@ -9,6 +9,9 @@ class Address
   field :city, type: String
   field :country, type: String
   field :post_code, type: String
+  field :type
+  
+  embedded_in :person
   
   def self.create_me(address_attrs: nil)
     a = self.new.update_attrs(address_attrs: address_attrs)

@@ -19,8 +19,11 @@ class Match
   def update_attrs(result)
     self.score = result._score
     self.matched_person = result._id
-    self.reducers = Matchers.new.process(person: self.person, potential: self.dup_person)
     self
+  end
+  
+  def reducers 
+    self.reducers = Matchers.new.process(person: self.person, potential: self.dup_person)
   end
   
   def dup_person

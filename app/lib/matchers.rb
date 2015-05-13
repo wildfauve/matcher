@@ -10,7 +10,7 @@ class Matchers
     end
   end
   
-  register_matchers :address_matcher
+  register_matchers :address_matcher, :client_id_matcher
   
   def matchers
     self.methods.select {|m| m[/_matcher/]}
