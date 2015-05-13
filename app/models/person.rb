@@ -4,21 +4,58 @@ class Person
 
   include Mongoid::Document
   include Mongoid::Timestamps  
-  include Elasticsearch::Model
-  include Elasticsearch::Model::Callbacks
+  #include Hashie::Extensions::Mash
+  include Mongoid::Elasticsearch
+  
+  elasticsearch!({
+    # index name (prefix is added)
+    index_name: "people-#{Rails.env}",
 
-=begin  
-  after_save do
-    __elasticsearch__.update_document
-  end
-=end
-  
-  index_name    "people-#{Rails.env}"
-  document_type "person"
-  
-  
-  #self.per_page = 10
-  
+    # don't use global name prefix
+    prefix_name: false,
+
+    index_options: {
+        # elasticsearch index definition
+      settings: {
+        index: {
+          analysis: {
+            filter: {
+              dbl_metaphone: {
+                type: "phonetic",
+                  encoder: "double_metaphone"
+                }
+              },
+              analyzer: {
+                dbl_metaphone: {
+                  replace: "true",
+                  filter: ["standard", "lowercase", "dbl_metaphone"],
+                  tokenizer: "standard"
+                },
+                email: {
+                  tokenizer: "uax_url_email"
+                }
+              }
+            }
+          }
+        },
+        mappings: {
+          "person" => {
+            properties: {
+              email: {
+                type: "string",
+                analyzer: "email"
+              },
+              full_name: {
+                type: "string",
+                analyzer: "dbl_metaphone"
+              }
+            }
+          }
+        }
+      },  
+    wrapper: :load
+  })
+    
   field :type, type: Symbol # contact_person
   field :contact_id, type: String # contact_person
   field :client_id, type: String # contact_person
@@ -37,98 +74,6 @@ class Person
   
   embeds_many :matches
     
-=begin  
-  {
-    "settings": {
-      "analysis": {
-        "filter": {
-          "dbl_metaphone": { 
-            "type":    "phonetic",
-            "encoder": "double_metaphone"
-          }
-        },
-        "analyzer": {
-          "dbl_metaphone": {
-            "tokenizer": "standard",
-            "filter":    "dbl_metaphone" 
-          }
-        }
-      }
-    }
-  }
-  
-  
-{
-  "properties": {
-    "name": {
-      "type": "string",
-      "fields": {
-        "phonetic": { 
-          "type":     "string",
-          "analyzer": "dbl_metaphone"
-        }
-      }
-    }
-  }
-}
-
-  # INDEX Settings and Mappings
-=end
-  settings index: {
-    number_of_shards: 1,
-    analysis: {
-      filter: {
-        trigrams_filter: {
-          type: 'ngram',
-          min_gram: 2,
-          max_gram: 10
-        },
-        content_filter: {
-          type: 'ngram',
-          min_gram: 4,
-          max_gram: 20
-        },
-        dbl_metaphone: { 
-          type: "phonetic",
-          encoder: "double_metaphone"
-        }
-      },
-      analyzer: {
-        index_trigrams_analyzer: {
-          type: 'custom',
-          tokenizer: 'standard',
-          filter: ['lowercase', 'trigrams_filter']
-        },
-        search_trigrams_analyzer: {
-          type: 'custom',
-          tokenizer: 'whitespace',
-          filter: ['lowercase']
-        },
-        english: {
-          tokenizer: 'standard',
-          filter: ['standard', 'lowercase', 'content_filter']
-        },
-        email: {
-          tokenizer: 'uax_url_email'
-        },
-        dbl_metaphone: {
-          tokenizer: "standard",
-          filter:    ["standard", "lowercase", "dbl_metaphone" ],
-          replace: true
-        }
-      }
-    }
-  } do
-    mappings dynamic: 'false' do
-      indexes :email, analyzer: :email
-      indexes :full_name, type: :string, analyzer: :dbl_metaphone    
-      #indexes :name, index_analyzer: 'index_trigrams_analyzer', search_analyzer: 'search_trigrams_analyzer'
-      #indexes :description, index_analyzer: 'english', search_analyzer: 'english'
-      #indexes :manufacturer_name, index_analyzer: 'english', search_analyzer: 'english'
-      #indexes :type_name, analyzer: 'snowball'
-    end
-  end
-
   
 
 =begin
@@ -181,8 +126,8 @@ from Signing_Authority
   
   def self.comparison
     self.all.each do |person|
-      s = self.search "+full_name:#{person.full_name}"
-      person.match s.results
+      s = self.es.search "+full_name:#{person.full_name}"
+      person.match s.hits
     end
   end
   
@@ -235,8 +180,9 @@ from Signing_Authority
     end
   end
   
-  def match(results)
-    results.each do |result|
+  def match(hits)
+    hits.each do |hit|
+      result = Hashie::Mash.new hit
       if result._id != self.id.to_s
         m = self.matches.where(matched_person: result._id).first
         if m

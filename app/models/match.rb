@@ -16,7 +16,7 @@ class Match
     m
   end
     
-  def update_attrs(result)
+  def update_attrs(result) # result is a hit as Hashie::Mash
     self.score = result._score
     self.matched_person = result._id
     self

@@ -39,8 +39,11 @@ gem 'foundation-icons-sass-rails'
 
 gem 'thin'
 
-gem 'elasticsearch-model'
-gem 'elasticsearch-rails'
+#gem 'elasticsearch-model'
+#gem 'elasticsearch-rails'
+gem 'mongoid-elasticsearch'
+
+gem 'hashie'
 
 gem 'will_paginate-foundation'
 gem "will_paginate_mongoid"
