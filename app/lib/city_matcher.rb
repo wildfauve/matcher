@@ -1,11 +1,11 @@
-class AddressMatcher
+class CityMatcher
   
   def name
-    :address_matcher
+    :city_matcher
   end
   
   def short_name
-    "address"
+    "city"
   end
   
   

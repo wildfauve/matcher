@@ -1,0 +1,19 @@
+<% @people.each do |person|%>
+   <div class="row">
+      <div class="small-3 columns">
+         <h5><%= person.full_name %></h5>
+      </div>
+      <div class="small-5 end columns">
+         <dl class="sub-nav">
+           <dt>Matches</dt>
+           <dd class="active">
+              <%= link_to person.matches.count, person_matches_path(person)%>
+           </dd>
+         </dl>
+      </div>
+   </div>
+   
+<% end %>
+
+
+<%= will_paginate @people, renderer: FoundationPagination::Rails %>

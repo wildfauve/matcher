@@ -1,0 +1,10 @@
+<%= form_tag(search_people_path, html: { class: "custom"}, remote: true) do %>
+   <div class="row">
+     <div class="small-3 columns">
+       <%= label_tag :search, nil, class: "right inline"%>
+     </div>
+     <div class="small-4 columns end">
+         <%= text_field_tag :search%>
+     </div> 
+   </div>
+<% end %>

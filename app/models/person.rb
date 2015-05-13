@@ -6,10 +6,18 @@ class Person
   include Mongoid::Timestamps  
   include Elasticsearch::Model
   include Elasticsearch::Model::Callbacks
+
+=begin  
+  after_save do
+    __elasticsearch__.update_document
+  end
+=end
   
   index_name    "people-#{Rails.env}"
   document_type "person"
   
+  
+  #self.per_page = 10
   
   field :type, type: Symbol # contact_person
   field :contact_id, type: String # contact_person
@@ -112,7 +120,6 @@ class Person
     }
   } do
     mappings dynamic: 'false' do
-      #indexes :full_name, type: :string, analyzer: :keyword    
       indexes :email, analyzer: :email
       indexes :full_name, type: :string, analyzer: :dbl_metaphone    
       #indexes :name, index_analyzer: 'index_trigrams_analyzer', search_analyzer: 'search_trigrams_analyzer'
@@ -174,7 +181,7 @@ from Signing_Authority
   
   def self.comparison
     self.all.each do |person|
-      s = self.search person.full_name
+      s = self.search "+full_name:#{person.full_name}"
       person.match s.results
     end
   end
@@ -198,7 +205,6 @@ from Signing_Authority
   
   
   def update_attrs(person: nil)
-    
     person.each {|name, value| self.send("#{name}=", value) unless [:address_line_1, :address_line_2, :address_line_3, :city, :country, :post_code, :first_name, :surname].include? name}
     self.full_name = {first_name: person[:first_name], surname: person[:surname]}
   end

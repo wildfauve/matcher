@@ -1,27 +1,21 @@
-<table class="table">
-   <thead>
-     <tr>
-       <th>Full Name</th>
-       <th>Type</th>     
-       <th>Matches</th>             
-       <th>Actions</th>             
-     </tr>
-   </thead>
-   <tbody>
-      <% @people.each do |person|%>
-         <tr>
-            <td>
-               <%= person.full_name%>
-            </td>
-            <td>
-               <%= person.type%>               
-            </td>
-            <td>
-               <% person.matches.each do |match| %>
-                  <%= render partial: "matches", locals: {match: match} %>
-               <% end %>
-            </td>            
-         </tr>
-      <% end %>
-   </tbody>
-</table>
+<div class="row">
+   <div class="large-2 columns">
+      <%= render "icon_bar"%>
+   </div>
+   <div class="large-10 columns">
+      <div class="row">
+         <div id="search"></div>
+      </div>
+      <div class="row">
+         <div class="large-7 columns">
+            <div id = "people">
+               <%= render 'people'%>
+            </div>
+         </div>
+         <div class="large-5 columns">
+            <div id='matches'></div>
+         </div>
+         
+      </div>
+   </div>
+</div>
