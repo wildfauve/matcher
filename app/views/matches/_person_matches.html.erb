@@ -1,0 +1,7 @@
+<div class="panel">
+  <h5><%= @person.full_name %></h5>
+</div>
+<% @person.matches.each do |match| %>
+   <%= render partial: 'matches', locals: {match: match} %>
+<% end %>
+

@@ -1,0 +1,17 @@
+<%= render partial: 'people/person', locals: {person: match.dup_person}%>
+
+<div class="row">
+   <dl class="sub-nav">
+     <dt>Reducers</dt>
+     <% match.reducers.each do |reduce| %>
+        <dd class=<%= active_test(reduce[:match]) %>><a href="#"><%= reduce[:matcher] %></a></dd>
+     <% end %>
+   </dl>   
+</div>
+<div class="row">
+   <dl class="sub-nav">
+     <dt>Match Score</dt>
+     <dd><%= match.score %></dd>
+   </dl>   
+</div>
+<%= link_to 'View Match', person_match_path(@person, match), class: "button"%>

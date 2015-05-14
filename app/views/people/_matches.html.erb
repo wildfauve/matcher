@@ -1,6 +1,0 @@
-<dl class="sub-nav">
-  <dt><%= match.dup_person.full_name %></dt>
-  <% match.reducers.each do |reduce| %>
-     <dd class=<%= active_test(reduce[:match]) %>><a href="#"><%= reduce[:matcher] %></a></dd>
-  <% end %>
-</dl>

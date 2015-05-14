@@ -1,7 +1,7 @@
 class PeopleController < ApplicationController
   
   def index
-    @people = Person.paginate(page: params[:page])
+    @people = Person.order_by(hits: :desc, full_name: :asc).paginate(page: params[:page])
   end
   
   def show

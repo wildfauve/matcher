@@ -69,6 +69,7 @@ class Person
   field :fax_no, type: String # contact_person
   field :fax_country, type: String # contact_person
   field :email, type: String # contact_person
+  field :hits, type: Integer
   
   embeds_many :addresses
   
@@ -132,26 +133,40 @@ from Signing_Authority
   end
   
   def self.load(person: nil)
-    self.new.create_me(person: person)
+    types = {contact: :contact_id}
+    id = types[person[:type]]
+    p = self.where(id => person[id]).first
+    if p
+      p.update_me(person: person)
+    else
+      self.new.create_me(person: person)
+    end
   end
   
   def create_me(person: nil)
-    self.addresses << Address.create_me(address_attrs: extract_address_attrs(person))
     self.update_attrs(person: person)
+    maintain_addresses(address_attrs: extract_address_attrs(person))
     self.save
-    #publish(:successful_green_kiwi_create_event, self)
+    publish(:successful_person_create_event, self)
   end
   
   def update_me(person: nil)
     self.update_attrs(person: person)
+    maintain_addresses(address_attrs: extract_address_attrs(person))    
     self.save
-    publish(:successful_green_kiwi_update_event, self)
+    publish(:successful_person_update_event, self)
   end
   
   
   def update_attrs(person: nil)
     person.each {|name, value| self.send("#{name}=", value) unless [:address_line_1, :address_line_2, :address_line_3, :city, :country, :post_code, :first_name, :surname].include? name}
     self.full_name = {first_name: person[:first_name], surname: person[:surname]}
+  end
+  
+  def maintain_addresses(addresses)
+    # there is no way to determine which address to update, so delete them first
+    self.addresses.delete_all
+    self.addresses << Address.create_me(addresses)
   end
   
   def extract_address_attrs(person)
@@ -181,6 +196,7 @@ from Signing_Authority
   end
   
   def match(hits)
+    own = 0
     hits.each do |hit|
       result = Hashie::Mash.new hit
       if result._id != self.id.to_s
@@ -192,9 +208,20 @@ from Signing_Authority
           self.matches << m
         end
         m.reducers
+      else
+        own = 1
       end
     end
+    self.hits = hits.count - own
     save
+  end
+  
+  def full_phone_number
+    "#{phone_country} #{phone_area} #{phone}"
+  end
+  
+  def full_fax_number
+    "#{fax_country} #{fax_area} #{fax_no}"
   end
   
 end

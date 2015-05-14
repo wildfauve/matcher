@@ -1,0 +1,98 @@
+<div class="row">
+  <div class="large-2 columns">
+    <h3 class="subheader">Property</h3>
+  </div>
+  <div class="large-3 columns">
+    <h3 class="subheader">Master</h3>
+  </div>
+  <div class="large-3 end columns">
+    <h3 class="subheader">Potential Match</h3>
+  </div>  
+</div>
+<div class="row">
+  <div class="large-2 columns">
+    <h5>Full Name</h5>
+  </div>
+  <div class="large-3 columns">
+    <%= @person.full_name%>
+  </div>
+  <div class="large-3 end columns">
+    <%= @match.full_name%>    
+  </div>  
+</div>
+<div class="row">
+  <div class="large-2 columns">
+    <h5>Type</h5>
+  </div>
+  <div class="large-3 columns">
+    <%= @person.type%>
+  </div>
+  <div class="large-3 end columns">
+    <%= @match.type%>    
+  </div>  
+</div>
+<div class="row">
+  <div class="large-2 columns">
+    <h5>Client ID</h5>
+  </div>
+  <div class="large-3 columns">
+    <%= @person.client_id%>
+  </div>
+  <div class="large-3 end columns">
+    <%= @match.client_id%>    
+  </div>  
+</div>
+<div class="row">
+  <div class="large-2 columns">
+    <h5>Email</h5>
+  </div>
+  <div class="large-3 columns">
+    <%= @person.email%>
+  </div>
+  <div class="large-3 end columns">
+    <%= @match.email%>    
+  </div>  
+</div>
+<div class="row">
+   <div class="large-2 columns">
+      <h5>Address</h5>
+   </div>
+   <div class="large-3 columns">
+      <% @person.addresses.each do |addr| %>
+         <%= addr.address_line_1%></br>
+         <%= addr.address_line_2%></br>
+         <%= addr.address_line_3%></br>
+         <%= addr.city%></br>
+         <%= addr.country%></br>
+         <%= addr.post_code%></br>
+      <% end %>
+   </div>   
+   <div class="large-3 end columns">
+      <% @match.addresses.each do |addr| %>
+         <%= addr.address_line_1%></br>
+         <%= addr.address_line_2%></br>
+         <%= addr.address_line_3%></br>
+         <%= addr.city%></br>
+         <%= addr.country%></br>
+         <%= addr.post_code%></br>
+      <% end %>
+   </div>   
+</div>
+<div class="row">
+   <div class="large-6 end columns">
+    <div class="icon-bar three-up">
+      <%= link_to duplicate_person_match_path(@person, @match), method: :post do %>
+        <i class="fi-check size-60"></i>
+        <label>Match</label>
+      <% end %>
+      <%= link_to no_duplicate_person_match_path(@person, @match), method: :post do %>
+        <i class="fi-x size-60"></i>
+        <label>No Match</label>    
+      <% end %>
+      <%= link_to undecided_person_match_path(@person, @match), method: :post do %>
+        <i class="fi-save size-60"></i>
+        <label>Decide Later</label>    
+      <% end %>
+    </div>
+  </div>
+</div>
