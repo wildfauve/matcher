@@ -12,7 +12,7 @@ class PeopleController < ApplicationController
   end
   
   def search
-    @people = Person.es.search(params[:search])
+    @people = Person.general_search(q: params[:search])
   end
   
 end

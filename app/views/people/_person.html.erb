@@ -1,0 +1,74 @@
+<div class="panel">
+  <h5><i class="fi-mail size-30"></i><%= person.full_name %></h5>
+</div>
+<div class="row">
+   <div class="large-5 columns">
+      <h4>Type</h4>
+   </div>
+   <div class="large-7 columns">
+      <h4 class="subheader"><%= person.type%></h4>
+   </div>   
+</div>
+
+<div class="row">
+   <div class="large-5 columns">
+      <h4>Client ID</h4>
+   </div>
+   <div class="large-7 columns">
+      <h4 class="subheader"><%= person.client_id%></h4>
+   </div>   
+</div>
+
+<div class="row">
+   <div class="large-5 columns">
+      <h4>Relationship</h4>
+   </div>
+   <div class="large-7 columns">
+      <h4 class="subheader"><%= person.relationship%></h4>
+   </div>   
+</div>
+
+<div class="row">
+   <div class="large-5 columns">
+      <h4>Phone</h4>
+   </div>
+   <div class="large-7 columns">
+      <h4 class="subheader"><%= person.full_phone_number%></h4>
+   </div>   
+</div>
+<div class="row">
+   <div class="large-5 columns">
+      <h4>Fax</h4>
+   </div>
+   <div class="large-7 columns">
+      <h4 class="subheader"><%= person.full_fax_number%></h4>
+   </div>   
+</div>
+<div class="row">
+   <div class="large-5 columns">
+      <h4>Email</h4>
+   </div>
+   <div class="large-7 columns">
+      <h4 class="subheader"><%= person.email%></h4>
+   </div>   
+</div>
+<div class="row">
+   <div class="large-5 columns">
+      <h4>Address</h4>
+   </div>
+   <div class="large-7 columns">
+      <% person.addresses.each do |addr| %>
+         <%= addr.address_line_1%></br>
+         <%= addr.address_line_2%></br>
+         <%= addr.address_line_3%></br>
+         <%= addr.city%></br>
+         <%= addr.country%></br>
+         <%= addr.post_code%></br>
+      <% end %>
+   </div>   
+</div>
+
+
+
+
+

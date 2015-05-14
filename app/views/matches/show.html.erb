@@ -17,7 +17,7 @@
     <%= @person.full_name%>
   </div>
   <div class="large-3 end columns">
-    <%= @match.full_name%>    
+    <%= @dup.full_name%>    
   </div>  
 </div>
 <div class="row">
@@ -28,7 +28,7 @@
     <%= @person.type%>
   </div>
   <div class="large-3 end columns">
-    <%= @match.type%>    
+    <%= @dup.type%>    
   </div>  
 </div>
 <div class="row">
@@ -39,7 +39,7 @@
     <%= @person.client_id%>
   </div>
   <div class="large-3 end columns">
-    <%= @match.client_id%>    
+    <%= @dup.client_id%>    
   </div>  
 </div>
 <div class="row">
@@ -50,7 +50,7 @@
     <%= @person.email%>
   </div>
   <div class="large-3 end columns">
-    <%= @match.email%>    
+    <%= @dup.email%>    
   </div>  
 </div>
 <div class="row">
@@ -58,7 +58,7 @@
       <h5>Address</h5>
    </div>
    <div class="large-3 columns">
-      <% @person.addresses.each do |addr| %>
+      <% @dup.addresses.each do |addr| %>
          <%= addr.address_line_1%></br>
          <%= addr.address_line_2%></br>
          <%= addr.address_line_3%></br>
@@ -68,7 +68,7 @@
       <% end %>
    </div>   
    <div class="large-3 end columns">
-      <% @match.addresses.each do |addr| %>
+      <% @dup.addresses.each do |addr| %>
          <%= addr.address_line_1%></br>
          <%= addr.address_line_2%></br>
          <%= addr.address_line_3%></br>
@@ -77,6 +77,12 @@
          <%= addr.post_code%></br>
       <% end %>
    </div>   
+</div>
+<div class="row">
+  <div data-alert class="alert-box">
+    <h5><%= @match.state%></h5>
+    <a href="#" class="close">&times;</a>
+  </div>
 </div>
 <div class="row">
    <div class="large-6 end columns">

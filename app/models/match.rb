@@ -7,6 +7,7 @@ class Match
   #field :matched_person, type: BSON::ObjectId
   field :matched_person, type: String
   field :reducers, type: Array
+  field :state, type: Symbol
   
   embedded_in :person
   
@@ -28,6 +29,11 @@ class Match
   
   def dup_person
     Person.find(matched_person)
+  end
+  
+  def decision(state)
+    self.state = state
+    self
   end
   
 end

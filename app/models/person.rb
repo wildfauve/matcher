@@ -127,9 +127,31 @@ from Signing_Authority
   
   def self.comparison
     self.all.each do |person|
-      s = self.es.search "+full_name:#{person.full_name}"
+      s = self.es.search(comp_search_dsl(person))
+      #s = self.es.search "+full_name:#{person.full_name}"
       person.match s.hits
     end
+  end
+  
+  def self.comp_search_dsl(person)
+    {
+      body: {
+        query: {
+          bool: {
+            must_not: {
+              match: {
+                _id: person.id.to_s
+              }
+            },
+            must: {
+              match: {
+                full_name: person.full_name
+              }
+            }
+          }
+        }        
+      }
+    }
   end
   
   def self.load(person: nil)
@@ -142,6 +164,19 @@ from Signing_Authority
       self.new.create_me(person: person)
     end
   end
+  
+  def self.general_search(q: nil)
+    self.es.search({
+      body: {
+        query: {
+          query_string: {
+            query: q
+          }          
+        }
+      }
+    })
+  end
+  
   
   def create_me(person: nil)
     self.update_attrs(person: person)
@@ -186,6 +221,11 @@ from Signing_Authority
     as_json(except: [:id, :_id])
   end
   
+  def match_decision(decision: nil, match: nil)
+    m = self.matches.find(match).decision(decision)
+    self.save
+    publish(:successful_match_decision_event, self, m)
+  end
   
   def full_name=(name)
     if name[:full_name]
@@ -215,7 +255,7 @@ from Signing_Authority
     self.hits = hits.count - own
     save
   end
-  
+    
   def full_phone_number
     "#{phone_country} #{phone_area} #{phone}"
   end
