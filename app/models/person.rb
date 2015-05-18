@@ -121,8 +121,7 @@ from Signing_Authority
   end
   
   def self.create_index
-    self.__elasticsearch__.create_index! force: true
-    self.__elasticsearch__.refresh_index!
+    self.es.index_all  
   end
   
   def self.comparison
@@ -225,6 +224,10 @@ from Signing_Authority
     m = self.matches.find(match).decision(decision)
     self.save
     publish(:successful_match_decision_event, self, m)
+  end
+  
+  def match_decisions_count
+    self.matches.select {|m| m.decision_made}.count
   end
   
   def full_name=(name)

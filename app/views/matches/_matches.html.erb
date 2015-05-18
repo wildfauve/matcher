@@ -1,5 +1,11 @@
 <%= render partial: 'people/person', locals: {person: match.dup_person}%>
 
+<div data-alert class="alert-box">
+  Decision: <%= match.state%>
+  <a href="#" class="close">&times;</a>
+</div>     
+
+
 <div class="row">
    <dl class="sub-nav">
      <dt>Reducers</dt>

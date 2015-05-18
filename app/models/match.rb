@@ -11,6 +11,8 @@ class Match
   
   embedded_in :person
   
+  scope :likely_match, -> {desc(:score)}
+  
   def self.create_me(result)
     m = self.new
     m.update_attrs(result)
@@ -34,6 +36,10 @@ class Match
   def decision(state)
     self.state = state
     self
+  end
+  
+  def decision_made
+    state == :duplicate || state == :no_duplicate
   end
   
 end
