@@ -58,23 +58,28 @@ class Person
     
   field :type, type: Symbol # contact_person
   field :contact_id, type: String # contact_person
-  field :client_id, type: String # contact_person
-  field :full_name, type: String # agg first_name, surnam
-  field :relationship, type: String # contact_person
+  field :client_id, type: String # contact_person, legal_party  
   field :department, type: String # contact_person
+  field :dob, type: Date # legal_party
+  field :deceased_date, type: Date # legal_party
+  field :email, type: String # contact_person  
+  field :fax_area, type: String # contact_person
+  field :fax_no, type: String # contact_person
+  field :fax_country, type: String # contact_person  
+  field :full_name, type: String # agg(first_name, surname), contact_person, legal_party  
+  field :gender, type: String # legal_party
+  field :hits, type: Integer  
+  field :legal_party_id, type: String # legal_party
+  field :perferred_name, type: String # legal party
   field :phone_area, type: String # contact_person
   field :phone, type: String # contact_person
   field :phone_country, type: String # contact_person
-  field :fax_area, type: String # contact_person
-  field :fax_no, type: String # contact_person
-  field :fax_country, type: String # contact_person
-  field :email, type: String # contact_person
-  field :hits, type: Integer
+  field :relationship, type: String # contact_person
+  field :title, type: String # legal_party
   
   embeds_many :addresses
   
-  embeds_many :matches
-    
+  embeds_many :matches  
   
 
 =begin
@@ -117,7 +122,7 @@ from Signing_Authority
 =end
   
   def self.delete_index
-    self.__elasticsearch__.client.indices.delete index: self.index_name rescue nil
+    #self.__elasticsearch__.client.indices.delete index: self.index_name rescue nil
   end
   
   def self.create_index
@@ -154,14 +159,10 @@ from Signing_Authority
   end
   
   def self.load(person: nil)
-    types = {contact: :contact_id}
+    types = {contact: :contact_id, legal_party: :legal_party_id}
     id = types[person[:type]]
     p = self.where(id => person[id]).first
-    if p
-      p.update_me(person: person)
-    else
-      self.new.create_me(person: person)
-    end
+    p ? p.update_me(person: person) : self.new.create_me(person: person)
   end
   
   def self.general_search(q: nil)
@@ -186,21 +187,31 @@ from Signing_Authority
   
   def update_me(person: nil)
     self.update_attrs(person: person)
-    maintain_addresses(address_attrs: extract_address_attrs(person))    
     self.save
     publish(:successful_person_update_event, self)
   end
   
   
   def update_attrs(person: nil)
-    person.each {|name, value| self.send("#{name}=", value) unless [:address_line_1, :address_line_2, :address_line_3, :city, :country, :post_code, :first_name, :surname].include? name}
+    person.each {|name, value| self.send("#{name}=", value) unless handled_attrs.include? name}
+    maintain_addresses(address_attrs: extract_address_attrs(person))
     self.full_name = {first_name: person[:first_name], surname: person[:surname]}
+    self.dob = Date.parse(person[:dob]) if person[:dob]
+    self.deceased_date = Date.parse(person[:deceased_date]) if person[:deceased_date] 
+  end
+  
+  def handled_attrs
+    [:address_line_1, :address_line_2, :address_line_3, :city, :country, :post_code, :first_name, :surname, :dob, :deceased_date]
   end
   
   def maintain_addresses(addresses)
     # there is no way to determine which address to update, so delete them first
     self.addresses.delete_all
-    self.addresses << Address.create_me(addresses)
+    self.addresses << Address.create_me(addresses) if person_has_address?(addresses)
+  end
+  
+  def person_has_address?(addresses)
+    addresses[:address_line_1].nil? ? false : true
   end
   
   def extract_address_attrs(person)
