@@ -1,0 +1,35 @@
+<%= form_for(setting, url: admin_setting_path(setting), html: { class: "custom"}) do |f| %>
+   <div class="row">
+     <div class="small-2 columns">
+       <%= f.label :name, class: "right inline"%>
+     </div>
+     <div class="small-10 columns">
+       <%= f.text_field :name, placeholder: "Config Name" %>
+     </div> 
+   </div>
+   <div class="row">
+     <div class="small-2 columns">
+       <%= f.label :value, class: "right inline" %>
+     </div>
+     <div class="small-10 columns">
+       <%= f.text_field :value, placeholder: "Value" %>
+     </div> 
+   </div>
+
+   <div class="row">
+     <div class="small-2 columns">
+       <%= f.label :type, class: "right inline" %>
+     </div>
+     <div class="small-10 columns">
+       <%= f.select(:type, options_for_select(Setting.types, setting.type), :include_blank => true, :prompt => "Select Type", :class => "medium")%>
+     </div> 
+   </div>
+   <div class="row">
+     <div class="small-10 small-offset-2 columns">
+       <%= f.submit 'Submit', :class => 'button small' %>
+     </div>
+   </div>
+   
+   
+
+<% end %>

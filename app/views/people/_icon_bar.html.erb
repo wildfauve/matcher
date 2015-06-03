@@ -3,6 +3,11 @@
       <i class="fi-torso"></i>
       <label>All People</label>
    <% end %>
+   <%= link_to(filtered_people_path, class: "item") do %>
+      <i class="fi-magnifying-glass"></i>
+      <label>Filtered</label>
+   <% end %>
+   
    <%= link_to(search_form_people_path, class: "item", remote: true) do %>
       <i class="fi-magnifying-glass"></i>
       <label>Search</label>

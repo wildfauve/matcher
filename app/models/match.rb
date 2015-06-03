@@ -11,7 +11,19 @@ class Match
   
   embedded_in :person
   
-  scope :likely_match, -> {desc(:score)}
+  scope :all_matches, -> {desc(:score)}
+  
+  def self.get_matches(filtered)
+    if filtered == "true"
+      self.filtered_match
+    else
+      self.all_matches
+    end
+  end
+  
+  def self.filtered_match
+    self.gt(score: Setting.value_for('min_score')).desc(:score)
+  end
   
   def self.create_me(result)
     m = self.new

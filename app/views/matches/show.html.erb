@@ -9,6 +9,20 @@
     <h3 class="subheader">Potential Match</h3>
   </div>  
 </div>
+
+<div class="row">
+  <div class="large-2 columns">
+    <h5>Type</h5>
+  </div>
+  <div class="large-3 columns">
+    <i class="fi-<%=type_icon(@person.type) %> size-30"></i>
+  </div>
+  <div class="large-3 end columns">
+    <i class="fi-<%=type_icon(@dup.type) %> size-30"></i>
+  </div>  
+</div>
+
+
 <div class="row">
   <div class="large-2 columns">
     <h5>Full Name</h5>
@@ -22,15 +36,41 @@
 </div>
 <div class="row">
   <div class="large-2 columns">
-    <h5>Type</h5>
+    <h5>Gender</h5>
   </div>
   <div class="large-3 columns">
-    <%= @person.type%>
+    <%= @person.try(:gender)%>
   </div>
   <div class="large-3 end columns">
-    <%= @dup.type%>    
+    <%= @dup.try(:gender)%>    
   </div>  
 </div>
+
+<div class="row">
+  <div class="large-2 columns">
+    <h5>DoB</h5>
+  </div>
+  <div class="large-3 columns">
+    <%= @person.try(:dob)%>
+  </div>
+  <div class="large-3 end columns">
+    <%= @dup.try(:dob)%>    
+  </div>  
+</div>
+
+<div class="row">
+  <div class="large-2 columns">
+    <h5>Preferred Name</h5>
+  </div>
+  <div class="large-3 columns">
+    <%= @person.try(:preferred_name)%>
+  </div>
+  <div class="large-3 end columns">
+    <%= @dup.try(:preferred_name)%>    
+  </div>  
+</div>
+
+
 <div class="row">
   <div class="large-2 columns">
     <h5>Client ID</h5>
@@ -58,7 +98,7 @@
       <h5>Address</h5>
    </div>
    <div class="large-3 columns">
-      <% @dup.addresses.each do |addr| %>
+      <% @person.addresses.each do |addr| %>
          <%= addr.address_line_1%></br>
          <%= addr.address_line_2%></br>
          <%= addr.address_line_3%></br>
@@ -78,6 +118,9 @@
       <% end %>
    </div>   
 </div>
+
+<%= render partial: 'reducers', locals: {match: @match}%>
+
 <div class="row">
   <div data-alert class="alert-box">
     <h5><%= @match.state%></h5>
@@ -98,7 +141,7 @@
       <%= link_to undecided_person_match_path(@person, @match), method: :post do %>
         <i class="fi-save size-60"></i>
         <label>Decide Later</label>    
-      <% end %>
+      <% end %>      
     </div>
   </div>
 </div>

@@ -1,0 +1,14 @@
+<div class="row">
+   <dl class="sub-nav">
+     <dt>Reducers</dt>
+     <% match.reducers.each do |reduce| %>
+        <dd class=<%= active_test(reduce[:match]) %>><a href="#"><%= reduce[:matcher] %></a></dd>
+     <% end %>
+   </dl>   
+</div>
+<div class="row">
+   <dl class="sub-nav">
+     <dt>Match Score</dt>
+     <dd><%= match.score %></dd>
+   </dl>   
+</div>

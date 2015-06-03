@@ -1,60 +1,98 @@
 <div class="panel">
-  <h5><i class="fi-mail size-30"></i><%= person.full_name %></h5>
+  <h5><i class="fi-<%=type_icon(person.type) %> size-30"></i><%= person.full_name %></h5>
 </div>
+
 <div class="row">
    <div class="large-5 columns">
-      <h4>Type</h4>
+      <h5>Title</h5>
    </div>
    <div class="large-7 columns">
-      <h4 class="subheader"><%= person.type%></h4>
+      <h4 class="subheader"><%= person.title%></h5>
    </div>   
 </div>
 
 <div class="row">
    <div class="large-5 columns">
-      <h4>Client ID</h4>
+      <h5>Preferred Name</h5>
    </div>
    <div class="large-7 columns">
-      <h4 class="subheader"><%= person.client_id%></h4>
+      <h4 class="subheader"><%= person.try(:perferred_name) %></h5>
    </div>   
 </div>
 
 <div class="row">
    <div class="large-5 columns">
-      <h4>Relationship</h4>
+      <h5>Gender</h5>
    </div>
    <div class="large-7 columns">
-      <h4 class="subheader"><%= person.relationship%></h4>
+      <h4 class="subheader"><%= person.try(:gender) %></h5>
    </div>   
 </div>
 
 <div class="row">
    <div class="large-5 columns">
-      <h4>Phone</h4>
+      <h5>dob</h5>
    </div>
    <div class="large-7 columns">
-      <h4 class="subheader"><%= person.full_phone_number%></h4>
+      <h4 class="subheader"><%= person.dob%></h5>
+   </div>   
+</div>
+
+
+<div class="row">
+   <div class="large-5 columns">
+      <h5>Type</h5>
+   </div>
+   <div class="large-7 columns">
+      <h4 class="subheader"><%= person.type%></h5>
+   </div>   
+</div>
+
+<div class="row">
+   <div class="large-5 columns">
+      <h5>Client ID</h5>
+   </div>
+   <div class="large-7 columns">
+      <h4 class="subheader"><%= person.client_id%></h5>
+   </div>   
+</div>
+
+<div class="row">
+   <div class="large-5 columns">
+      <h5>Relationship</h5>
+   </div>
+   <div class="large-7 columns">
+      <h4 class="subheader"><%= person.relationship%></h5>
+   </div>   
+</div>
+
+<div class="row">
+   <div class="large-5 columns">
+      <h5>Phone</h5>
+   </div>
+   <div class="large-7 columns">
+      <h4 class="subheader"><%= person.full_phone_number%></h5>
    </div>   
 </div>
 <div class="row">
    <div class="large-5 columns">
-      <h4>Fax</h4>
+      <h5>Fax</h5>
    </div>
    <div class="large-7 columns">
-      <h4 class="subheader"><%= person.full_fax_number%></h4>
+      <h4 class="subheader"><%= person.full_fax_number%></h5>
    </div>   
 </div>
 <div class="row">
    <div class="large-5 columns">
-      <h4>Email</h4>
+      <h5>Email</h5>
    </div>
    <div class="large-7 columns">
-      <h4 class="subheader"><%= person.email%></h4>
+      <h4 class="subheader"><%= person.email%></h5>
    </div>   
 </div>
 <div class="row">
    <div class="large-5 columns">
-      <h4>Address</h4>
+      <h5>Address</h5>
    </div>
    <div class="large-7 columns">
       <% person.addresses.each do |addr| %>

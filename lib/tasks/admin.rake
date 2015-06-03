@@ -15,6 +15,22 @@ namespace :admin do
   end
 
 
+  desc "Load Signing Auth from csv"
+  task load_signing: :environment do
+    people = CSV.read('/Users/wildfauve/Documents/customers/FishServe/data/1_signing_auth.csv', {:col_sep => "|"})
+    handler = PeopleImportHandler.new(people: people, type: :signing_auth)
+    handler.process
+  end
+
+  desc "Load Client Individuals from csv"
+  task load_client: :environment do
+    people = CSV.read('/Users/wildfauve/Documents/customers/FishServe/data/1_client_individual.csv', {:col_sep => "|"})
+    handler = PeopleImportHandler.new(people: people, type: :client)
+    handler.process
+  end
+
+
+
   desc "Match People"
   task match: :environment do
     Person.comparison

@@ -55,27 +55,33 @@ class Person
       },  
     wrapper: :load
   })
-    
-  field :type, type: Symbol # contact_person
+
+  field :auth_sig_id, type: String # signing_auth  
   field :contact_id, type: String # contact_person
-  field :client_id, type: String # contact_person, legal_party  
+  field :client_id, type: String # contact_person, legal_party, client
+  field :communication_type, type: String # contact_person, legal_party, client
   field :department, type: String # contact_person
-  field :dob, type: Date # legal_party
+  field :dob, type: Date # legal_party, client
   field :deceased_date, type: Date # legal_party
-  field :email, type: String # contact_person  
+  field :email, type: String # contact_person, client 
   field :fax_area, type: String # contact_person
   field :fax_no, type: String # contact_person
   field :fax_country, type: String # contact_person  
-  field :full_name, type: String # agg(first_name, surname), contact_person, legal_party  
+  field :from_date, type: Date # signing_auth    
+  field :full_name, type: String # agg(first_name, surname), contact_person, legal_party, client  
   field :gender, type: String # legal_party
   field :hits, type: Integer  
   field :legal_party_id, type: String # legal_party
-  field :perferred_name, type: String # legal party
+  field :legal_name, type: String # client  
+  field :perferred_name, type: String # legal party, client
   field :phone_area, type: String # contact_person
   field :phone, type: String # contact_person
   field :phone_country, type: String # contact_person
   field :relationship, type: String # contact_person
+  field :signing_client_id, type: String # signing_auth    
   field :title, type: String # legal_party
+  field :to_date, type: Date # signing_auth    
+  field :type, type: Symbol
   
   embeds_many :addresses
   
@@ -83,10 +89,16 @@ class Person
   
 
 =begin
--- Client_ID, Client_Type, Legal_Name, Title, First_Names, Surname, Preferred_Name, DoB
-select Client_ID, Client_Type, Legal_Name, isnull(Title, '') [Title], First_Names, Surname, isnull(Preferred_Name, '') [Preferred_Name]
-, isnull(convert(varchar(10), Commencement_Date, 120), '') as DOB
-from Client where Client_Type = 'individual'
+  
+select c.Client_ID, Client_Type, Legal_Name, isnull(Title, '') [Title], First_Names, Surname, isnull(Preferred_Name, '') [Preferred_Name]
+, isnull(convert(varchar(10), Commencement_Date, 120), '') as DOB, isnull(e.Email, '') [Email]
+, isnull(addr.Communication_Type, '') [Communication_Type], isnull(addr.Postal_Address_Line_1, '') [Postal_Address_Line_1]
+, isnull(addr.Postal_Address_Line_2, '') [Postal_Address_Line_2], isnull(addr.Postal_Address_Line_3, '') [Postal_Address_Line_3]
+, isnull(addr.Postal_City, '') [Postal_City], isnull(addr.Postal_Country, '') [Postal_Country], isnull(addr.Postal_Post_Code, '') [Postal_Post_Code]
+, isnull(addr.Physical_Address_Line_1, '') [Physical_Address_Line_1], isnull(addr.Physical_Address_Line_2, '') [Physical_Address_Line_2]
+, isnull(addr.Physical_Address_Line_3, '') [Physical_Address_Line_3], isnull(addr.Physical_City, '') [Physical_City]
+, isnull(addr.Physical_Country, '') [Physical_Country], isnull(addr.Physical_Post_Code, '') [Physical_Post_Code]
+from Client c
 
 -- Client_ID, Legal_Party_ID, First_Name, Surname, Preferred_Name, Title, DOB, Gender, Deceased_Date
 select Client_ID, Legal_Party_ID, First_Name, Surname
@@ -94,7 +106,7 @@ select Client_ID, Legal_Party_ID, First_Name, Surname
 , isnull(Title, '') [Title]
 , isnull(convert(varchar(10), DOB, 120), '') as DOB
 , isnull(Gender, '') [Gender]
-, isnull(convert(varchar( 10), Deceased_Date, 120), '') [Deceased_Date]
+, isnull(convert(varchar(10), Deceased_Date, 120), '') [Deceased_Date]
 from Legal_Parties
 
 -- Contact_ID, Client_ID, First_Name, Surname, Relationship, Address_Line_1, Address_Line_2, Address_Line_3, City, Country, Post_Code, Department, Phone_Area, Phone, Phone_Country, Fax_Area,Fax_No, Fax_Country,Email 
@@ -118,6 +130,7 @@ Select Auth_Sig_ID, Client_ID
 , isnull(convert(varchar(10), From_Date, 120), '') [From_Date]
 , isnull(convert(varchar(10), To_Date, 120), '') [To_Date]
 from Signing_Authority
+
   
 =end
   
@@ -137,6 +150,10 @@ from Signing_Authority
     end
   end
   
+  def self.individual_comparison(person)
+    self.es.search(comp_search_dsl(person))
+  end
+  
   def self.comp_search_dsl(person)
     {
       body: {
@@ -151,6 +168,11 @@ from Signing_Authority
               match: {
                 full_name: person.full_name
               }
+            },
+            should: {
+              match: {
+                email: person.email
+              }
             }
           }
         }        
@@ -159,7 +181,7 @@ from Signing_Authority
   end
   
   def self.load(person: nil)
-    types = {contact: :contact_id, legal_party: :legal_party_id}
+    types = {contact: :contact_id, legal_party: :legal_party_id, client: :client_id}
     id = types[person[:type]]
     p = self.where(id => person[id]).first
     p ? p.update_me(person: person) : self.new.create_me(person: person)
@@ -194,41 +216,37 @@ from Signing_Authority
   
   def update_attrs(person: nil)
     person.each {|name, value| self.send("#{name}=", value) unless handled_attrs.include? name}
-    maintain_addresses(address_attrs: extract_address_attrs(person))
+    maintain_addresses(address_attrs: Address.extract_address_attrs(person))
     self.full_name = {first_name: person[:first_name], surname: person[:surname]}
     self.dob = Date.parse(person[:dob]) if person[:dob]
-    self.deceased_date = Date.parse(person[:deceased_date]) if person[:deceased_date] 
+    self.deceased_date = date_it(person[:deceased_date])
+    self.from_date = date_it(person[:from_date])
+    self.to_date = date_it(person[:to_date])
+  end
+  
+  def date_it(date)
+    Date.parse(date) if date
   end
   
   def handled_attrs
-    [:address_line_1, :address_line_2, :address_line_3, :city, :country, :post_code, :first_name, :surname, :dob, :deceased_date]
+    [:address_line_1, :address_line_2, :address_line_3, 
+      :city, :country, :post_code, 
+      :first_name, :surname, :dob, :deceased_date, :from_date, :to_date,
+      :client_type,
+      :postal_address_line_1, :postal_address_line_2, :postal_address_line_3, :postal_city, :postal_country, :postal_post_code, 
+      :physical_address_line_1,:physical_address_line_2, :physical_address_line_3, :physical_city, :physical_country, :physical_post_code
+    ]
   end
   
   def maintain_addresses(addresses)
     # there is no way to determine which address to update, so delete them first
     self.addresses.delete_all
-    self.addresses << Address.create_me(addresses) if person_has_address?(addresses)
+    addresses[:address_attrs].each {|addr| self.addresses << Address.create_me(addr: addr) }
   end
   
-  def person_has_address?(addresses)
-    addresses[:address_line_1].nil? ? false : true
-  end
-  
-  def extract_address_attrs(person)
-    {
-      address_line_1: person[:address_line_1],
-      address_line_2: person[:address_line_2], 
-      address_line_3: person[:address_line_3], 
-      city: person[:city], 
-      country: person[:country],
-      post_code: person[:post_code],
-      type: person[:type]
-    }
-    
-  end
   
   def as_indexed_json(options={})
-    as_json(except: [:id, :_id])
+    as_json(except: [:id, :_id, :matches])
   end
   
   def match_decision(decision: nil, match: nil)

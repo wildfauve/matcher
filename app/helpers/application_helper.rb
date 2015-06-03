@@ -13,4 +13,20 @@ module ApplicationHelper
     end
   end
   
+  def type_icon(type)
+    case type
+    when :contact
+      "mail"
+    when :legal_party
+      "crown"
+    else
+      ""
+    end
+  end
+  
+  def setting_types
+    [Setting.types]
+  end
+  
+  
 end

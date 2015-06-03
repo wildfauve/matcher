@@ -2,6 +2,7 @@ class MatchesController < ApplicationController
   
   def index
     @person = Person.find(params[:person_id])
+    @apply_filter = params[:filtered]
   end
   
   def show

@@ -1,24 +1,39 @@
+<% if @filter %>
+  <dl class="sub-nav">
+   <dt>Score Filter</dt>
+   <dd class="active">
+     <%= @filter %>
+   </dd>
+  </dl>
+<% end %>
+
 <% @people.each do |person|%>
   <div class="panel">
    <div class="row">
       <div class="small-1 columns">
-         <i class="fi-mail size-30"></i>
+         <i class="fi-<%=type_icon(person.type) %> size-30"></i>
       </div>
-      <div class="small-4 columns">
+      <div class="small-11 columns">
          <h5><%= link_to person.full_name, person_path(person), remote: true %></h5>
       </div>
-      <div class="small-5 end columns">
+    </div>
+    <div class="row">
+      <div class="small-12 columns">
          <dl class="sub-nav">
-           <dt>Matches</dt>
+           <dt>Filtered Match</dt>
            <dd class="active">
-              <%= link_to person.matches.count, person_matches_path(person), remote: true%>
+              <%= link_to person.matches.filtered_match.count, person_matches_path(person, filtered: true), remote: true%>
            </dd>
+           <dt>Total Match</dt>
+           <dd class="active">
+              <%= link_to person.matches.count, person_matches_path(person, filtered: false), remote: true%>
+           </dd>           
          </dl>
       </div>
    </div>
    <div class="row">
      <dl class="sub-nav">
-       <dt>Descisions</dt>
+       <dt>Decisions</dt>
        <dd class="active">
           <%= link_to person.match_decisions_count, "#"%>
        </dd>

@@ -48,6 +48,7 @@ gem 'hashie'
 gem 'will_paginate-foundation'
 gem "will_paginate_mongoid"
 
+#gem 'influxdb-rails'
 
 group :development, :test do
   # Call 'byebug' anywhere in the code to stop execution and get a debugger console
