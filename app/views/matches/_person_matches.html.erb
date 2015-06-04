@@ -1,5 +1,5 @@
 <div class="panel">
-  <h5><%= @person.full_name %></h5>
+  <h5><i class="fi-<%=type_icon(@person.type) %> size-30"></i><%= @person.full_name %></h5>
 </div>
 <% @person.matches.get_matches(@apply_filter).each do |match| %>
    <%= render partial: 'matches', locals: {match: match} %>

@@ -1,7 +1,7 @@
 <div class="row">
    <dl class="sub-nav">
      <dt>Reducers</dt>
-     <% match.reducers.each do |reduce| %>
+     <% match.run_reducers.each do |reduce| %>
         <dd class=<%= active_test(reduce[:match]) %>><a href="#"><%= reduce[:matcher] %></a></dd>
      <% end %>
    </dl>   

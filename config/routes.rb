@@ -24,6 +24,7 @@ Rails.application.routes.draw do
     resources :jobs do
       collection do
         post 'match'
+        post 'export'
       end
     end
   end

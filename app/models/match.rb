@@ -37,8 +37,10 @@ class Match
     self
   end
   
-  def reducers 
+  def run_reducers 
     self.reducers = Matchers.new.process(person: self.person, potential: self.dup_person)
+    self.save
+    self.reducers
   end
   
   def dup_person
@@ -53,5 +55,6 @@ class Match
   def decision_made
     state == :duplicate || state == :no_duplicate
   end
+  
   
 end

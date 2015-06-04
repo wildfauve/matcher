@@ -19,6 +19,8 @@ module ApplicationHelper
       "mail"
     when :legal_party
       "crown"
+    when :client
+      "torso"
     else
       ""
     end

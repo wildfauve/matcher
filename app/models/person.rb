@@ -173,7 +173,12 @@ from Signing_Authority
               match: {
                 email: person.email
               }
-            }
+            },
+            should: {
+              match: {
+                preferred_name: person.perferred_name
+              }
+            }            
           }
         }        
       }
@@ -188,15 +193,49 @@ from Signing_Authority
   end
   
   def self.general_search(q: nil)
-    self.es.search({
-      body: {
-        query: {
-          query_string: {
-            query: q
-          }          
+    self.es.search(
+      {
+        body: {
+          query: {
+            query_string: {
+              query: q
+            }          
+          }
         }
       }
-    })
+    )
+  end
+  
+  def self.generate_download(people)
+    Jbuilder.encode do |json| 
+      json.status "ok"
+      json.count people.count
+      json.people people do |person|
+        json.id person.id.to_s
+        json.set! person.type_id_name, person.type_id_id
+        json.client_id person.client_id
+        json.type person.type
+        json.full_name person.full_name
+        json.total_matches person.matches.count
+        json.filtered_matches person.matches.get_matches("true") do |match|
+          json.score match.score
+          #json.reducers match.reducers
+          json.set! :reducers do
+            match.reducers.each {|red| json.set! red["matcher"], red["match"] }
+          end
+          @dup = match.dup_person
+          json.matched_person do 
+            json.id @dup.id.to_s
+            json.full_name @dup.full_name
+            json.set! @dup.type_id_name, @dup.type_id_id
+            json.client_id @dup.client_id
+            json.type @dup.type
+            json.full_name @dup.full_name
+
+          end
+        end
+      end
+    end
   end
   
   
@@ -279,13 +318,28 @@ from Signing_Authority
           m = Match.create_me(result)
           self.matches << m
         end
-        m.reducers
+        m.run_reducers
       else
         own = 1
       end
     end
     self.hits = hits.count - own
     save
+  end
+  
+  def type_id_id
+    self.send(self.type_id_name)
+  end
+  
+  def type_id_name
+    case self.type
+    when :contact
+      :contact_id
+    when :legal_party
+      :legal_party_id
+    when :client
+      :client_id
+    end
   end
     
   def full_phone_number
@@ -295,5 +349,5 @@ from Signing_Authority
   def full_fax_number
     "#{fax_country} #{fax_area} #{fax_no}"
   end
-  
+    
 end
