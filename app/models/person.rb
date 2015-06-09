@@ -48,6 +48,10 @@ class Person
               full_name: {
                 type: "string",
                 analyzer: "dbl_metaphone"
+              },
+              preferred_name: {
+                type: "string",
+                analyzer: "dbl_metaphone"
               }
             }
           }
@@ -73,7 +77,7 @@ class Person
   field :hits, type: Integer  
   field :legal_party_id, type: String # legal_party
   field :legal_name, type: String # client  
-  field :perferred_name, type: String # legal party, client
+  field :preferred_name, type: String # legal party, client
   field :phone_area, type: String # contact_person
   field :phone, type: String # contact_person
   field :phone_country, type: String # contact_person
@@ -169,20 +173,18 @@ from Signing_Authority
                 full_name: person.full_name
               }
             },
-            should: {
-              match: {
-                email: person.email
-              }
-            },
-            should: {
-              match: {
-                preferred_name: person.perferred_name
-              }
-            }            
+            should: self.add_shoulds(person)
           }
         }        
       }
     }
+  end
+  
+  def self.add_shoulds(person)
+    shoulds = []
+    #shoulds << {match: {email: person.email}} if person[:email]
+    #shoulds << {match: {email: person.preferred_name}} if person[:preferred_name]
+    shoulds
   end
   
   def self.load(person: nil)
@@ -206,9 +208,10 @@ from Signing_Authority
     )
   end
   
-  def self.generate_download(people)
+  def self.generate_download(people, filter)
     Jbuilder.encode do |json| 
-      json.status "ok"
+      json.filter_name filter.name
+      json.filter_desc filter.desc
       json.count people.count
       json.people people do |person|
         json.id person.id.to_s
@@ -218,20 +221,21 @@ from Signing_Authority
         json.full_name person.full_name
         json.total_matches person.matches.count
         json.filtered_matches person.matches.get_matches("true") do |match|
-          json.score match.score
-          #json.reducers match.reducers
-          json.set! :reducers do
-            match.reducers.each {|red| json.set! red["matcher"], red["match"] }
-          end
-          @dup = match.dup_person
-          json.matched_person do 
-            json.id @dup.id.to_s
-            json.full_name @dup.full_name
-            json.set! @dup.type_id_name, @dup.type_id_id
-            json.client_id @dup.client_id
-            json.type @dup.type
-            json.full_name @dup.full_name
+          if filter.fired?(match)
+            json.score match.score
+            json.set! :reducers, match.reducers
+#              match.reducers.each {|red| json.set! red["matcher"], red["match"] }
+#            end
+            @dup = match.dup_person
+            json.matched_person do 
+              json.id @dup.id.to_s
+              json.full_name @dup.full_name
+              json.set! @dup.type_id_name, @dup.type_id_id
+              json.client_id @dup.client_id
+              json.type @dup.type
+              json.full_name @dup.full_name
 
+            end
           end
         end
       end
@@ -241,7 +245,7 @@ from Signing_Authority
   
   def create_me(person: nil)
     self.update_attrs(person: person)
-    maintain_addresses(address_attrs: extract_address_attrs(person))
+    maintain_addresses(address_attrs: Address.extract_address_attrs(person))
     self.save
     publish(:successful_person_create_event, self)
   end
@@ -257,10 +261,10 @@ from Signing_Authority
     person.each {|name, value| self.send("#{name}=", value) unless handled_attrs.include? name}
     maintain_addresses(address_attrs: Address.extract_address_attrs(person))
     self.full_name = {first_name: person[:first_name], surname: person[:surname]}
-    self.dob = Date.parse(person[:dob]) if person[:dob]
-    self.deceased_date = date_it(person[:deceased_date])
-    self.from_date = date_it(person[:from_date])
-    self.to_date = date_it(person[:to_date])
+    [:dob, :deceased_date, :from_date, :to_date].each do |date|
+      d = Date.parse(person[date]) rescue nil
+      self.send("#{date}=", d) if d
+    end
   end
   
   def date_it(date)
@@ -307,23 +311,15 @@ from Signing_Authority
   end
   
   def match(hits)
-    own = 0
+    self.matches.delete_all if self.matches
     hits.each do |hit|
       result = Hashie::Mash.new hit
-      if result._id != self.id.to_s
-        m = self.matches.where(matched_person: result._id).first
-        if m
-          m.update_attrs(result)
-        else
-          m = Match.create_me(result)
-          self.matches << m
-        end
-        m.run_reducers
-      else
-        own = 1
-      end
+      raise if result._id == self.id.to_s
+      m = Match.create_me(result)
+      self.matches << m
+      m.run_reducers
     end
-    self.hits = hits.count - own
+    self.hits = hits.count
     save
   end
   

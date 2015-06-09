@@ -238,3 +238,6 @@ DEPENDENCIES
   will_paginate-foundation
   will_paginate_mongoid
   wisper
+
+BUNDLED WITH
+   1.10.3

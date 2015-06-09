@@ -19,7 +19,7 @@ class PostalAddressMatcher
         match_ct += 1
       end      
     end
-    match_ct > 1 ? match = :yes : match = :no
+    match_ct > 1 ? match = true : match = false
     {matcher: self.short_name, match: match}
   end
   

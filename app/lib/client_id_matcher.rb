@@ -9,12 +9,12 @@ class ClientIdMatcher
   end
   
   def match(person: nil, potential: nil) 
-    if person.client_id == potential.client_id
-      match = :yes
-    elsif person.client_id.nil? || potential.client_id.nil?
-      match = :uncertain
+    if person.client_id.nil? || potential.client_id.nil?
+      match = false
+    elsif person.client_id == potential.client_id
+      match = true
     else
-      match = :no
+      match = false
     end
     {matcher: self.short_name, match: match}
   end

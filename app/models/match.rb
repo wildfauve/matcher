@@ -6,7 +6,7 @@ class Match
   field :score, type: Float
   #field :matched_person, type: BSON::ObjectId
   field :matched_person, type: String
-  field :reducers, type: Array
+  field :reducers, type: Hash
   field :state, type: Symbol
   
   embedded_in :person
@@ -25,6 +25,11 @@ class Match
     self.gt(score: Setting.value_for('min_score')).desc(:score)
   end
   
+  def self.reducer_state_for(reducer)
+    self.in(reducers: {"matcher" => reducer.to_s, "match" => true})
+  end
+  
+  
   def self.create_me(result)
     m = self.new
     m.update_attrs(result)
@@ -41,6 +46,10 @@ class Match
     self.reducers = Matchers.new.process(person: self.person, potential: self.dup_person)
     self.save
     self.reducers
+  end
+  
+  def reducer_state_for(reducer)
+    self.reducers.find {|c| c[:matcher] == reducer.to_s}["match"]
   end
   
   def dup_person

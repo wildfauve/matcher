@@ -10,12 +10,12 @@ class EmailMatcher
   
   
   def match(person: nil, potential: nil) 
-    if person.email == potential.email
-      match = :yes
-    elsif person.email.nil? || potential.email.nil?
-      match = :uncertain
+    if person.email.nil? || potential.email.nil?
+      match = false
+    elsif person.email == potential.email
+      match = true
     else
-      match = :no
+      match = false
     end
     {matcher: self.short_name, match: match}
   end

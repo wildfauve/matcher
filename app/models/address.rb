@@ -40,7 +40,6 @@ class Address
   end
   
   def update_attrs(address_attrs: nil)
-    binding.pry
     address_attrs.each {|name, value| self.send("#{name}=", value)}
     self
   end

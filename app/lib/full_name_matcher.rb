@@ -1,18 +1,18 @@
-class CityMatcher
+class FullNameMatcher
   
   def name
-    :city_matcher
+    :full_name_matcher
   end
   
   def short_name
-    "city"
+    "fullname"
   end
   
   
   def match(person: nil, potential: nil) 
-    person_cities = cities(person)
-    pot_cities = cities(potential)
-    if person_cities == pot_cities
+    if person.full_name.nil? || potential.full_name.nil?
+      match = false
+    elsif person.full_name == potential.full_name
       match = true
     else
       match = false
@@ -20,9 +20,6 @@ class CityMatcher
     {matcher: self.short_name, match: match}
   end
   
-  def cities(p)
-    p.addresses.collect(&:city).uniq!
-  end
   
 end
   

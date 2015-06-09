@@ -2,12 +2,10 @@ module ApplicationHelper
   
   def active_test(match)
     case match
-      when :yes 
+      when true 
         "active"
-      when :no
+      when false
         "inactive"
-      when :uncertain
-        "uncertain"
       else
         ""
     end

@@ -8,8 +8,7 @@ class Admin::JobsController < ApplicationController
   end
   
   def export
-    @people = Person.where(full_name: "Adam David Davey")
-    send_data Person.generate_download(@people),
+    send_data Person.generate_download([Person.last], AllFilter.new),
               filename: "people_export.json",
               type: "application/json"
   end
