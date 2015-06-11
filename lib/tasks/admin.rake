@@ -49,4 +49,10 @@ namespace :admin do
     OutputGenerator.new(filter: EmailFullNameFilter.new, file: "/Users/colperks/Documents/Customers--Local Only/Fishserve/personal data/email_full_name_filtered.json").generate
   end
 
+  desc "Output Filtered Email"
+  task output_email: :environment do
+    OutputGenerator.new(filter: EmailFilter.new, file: "/Users/colperks/Documents/Customers--Local Only/Fishserve/personal data/email_filtered.json").generate
+  end
+
+
 end
